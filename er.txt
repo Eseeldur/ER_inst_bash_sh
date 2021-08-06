@@ -1,0 +1,106 @@
+server {
+    listen       80;
+    server_name  192.168.224.142;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-NginX-Proxy true;
+    proxy_hide_header X-Powered-By;
+    fastcgi_hide_header X-Powered-By;
+    
+    root            /var/www/html;
+    charset         utf-8;
+    autoindex off;
+ 
+    location = / {
+                index  index.php;
+    }
+     
+    location ~ /(Etc|temp).*$ {
+                  deny all;
+             return 404;
+        }
+ 
+ 
+    location ~ ^/.*\.(inc|htaccess)$ {
+                      deny all;
+                     return 404;
+    }
+     
+    location ~ ^/WebServices/conf.inc {
+                  deny all;
+                  return 404;
+    }
+ 
+ 
+        location / {
+                rewrite ^/fileredirect_([a-z0-9]+)\/([\s\S]*)$ /request.php?$query_string last;
+                rewrite ^/~(d3[a-z]+)$ /index.php?$1=1 last;
+                rewrite ^/-([a-z_]+)(\/([a-zA-Z0-9\-\_\/\\\\]+))?$ /request.php?type=$1&_endpoint_=$3 last;
+                rewrite ^/([a-zA-Z0-9\-\_\/\\\\\.]*)\.[0-9]+(\_[a-z]+)*\.js/?$ /$1$2.js last;
+                rewrite ^/([a-zA-Z0-9\-\_\/\\\\\.]*)\.[0-9]+(\_[a-z]+)*\.css/?$ /$1$2.css last;
+                rewrite ^/([a-zA-Z0-9\-\_\/\\\\\.]*)\_[a-z]+\.js/?$ /$1.js last;
+                rewrite ^/([a-zA-Z0-9\-\_\/\\\.]*)\_[a-z]+\.css/?$ /$1.css last;
+                rewrite ^/~(Icon|Image)(_[a-zA-Z0-9\-\_]+)?\/([a-zA-Z0-9\-\_\/]+)(\.(png|jpeg|jpg|gif))?$ /gettheme.php?type=$1&name=$3$2.$5 last;
+                rewrite ^/~Cmp([a-zA-Z]+)\/([a-zA-Z0-9\-\_\/]*)$ /gettheme.php?type=CmpImage&cmp=$1&name=$2 last;
+                rewrite ^/~IconForm\/([a-zA-Z0-9\-\_\/]*)$ /gettheme.php?type=IconForm&name=$1 last;
+                rewrite ^/~FormImage\/([a-zA-Z0-9\-\_\/]+)(\.(png|jpeg|jpg|gif))?$ /gettheme.php?type=FormImage&name=$1.$3 last;
+                rewrite ^/~Static\/([a-zA-Z0-9\-\_\/\.]*)$ /gettheme.php?type=Static&name=$1 last;
+                index  index.php;
+                try_files $uri @m2resources;
+                rewrite ^/(~.+)$ /$1 last;
+ 
+ 
+    }
+ 
+         location ~ ^/(webservice(s?)|ws|WebServices)\/([a-zA-Z0-9\_\/\-\$]+)$ {
+                if ($args = wsdl) {
+                        set $args _type=wsdl;
+                }
+                rewrite ^/(webservice(s?)|ws|WebServices)\/([a-zA-Z0-9\_\/\-\$]+)$ /webservice.php?service=$3 last;
+        }
+ 
+        location ~ ^/(webservice(s?)|ws)\/([a-zA-Z0-9\_\/\-\.]+.(xsd|xsl))$ {
+                rewrite ^/(webservice(s?)|ws)\/([a-zA-Z0-9\_\/\-\.]+.(xsd|xsl))$ /WebServices/$3 last;
+        }
+ 
+        location @m2resources {
+                rewrite ^([a-zA-Z0-9\-\_\/\\\\]*)\.[0-9]+(\_[a-z0-9]+)*\.(js|css)/?$ $1$2.$3 last;
+                rewrite ^([a-zA-Z0-9\-\_\/\\\\\.]*)\_[a-z0-9]+\.(js|css)/?$ $1.$2 last;
+                rewrite Icons/(.*)$ /geticon.php?icon=$1 last;
+        }
+ 
+ 
+       location ~ \.php$ {
+                fastcgi_pass   unix:/var/run/php-fpm/php7-fpm.sock;
+                fastcgi_index  index.php;
+                fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                #fastcgi_param  QUERY_STRING    q=$uri&$args;
+                include        fastcgi_params;
+                fastcgi_read_timeout 30m;
+                fastcgi_buffer_size 32k;
+                fastcgi_buffers 4 32k;
+ 
+        }
+ 
+ 
+ 
+        location /nginx-stats {
+                stub_status on;
+                access_log off;
+                allow 127.0.0.1;
+                allow ::1;
+                allow 192.168.0.22;
+                deny all;
+        }
+ 
+        location /php-stats {
+                fastcgi_pass   unix:/var/run/php-fpm/php7-fpm.sock;
+                include        fastcgi_params;
+                fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                access_log off;
+                allow 127.0.0.1;
+                allow ::1;
+                deny all;
+        }
+}
