@@ -74,7 +74,7 @@ chown -R root.nginx /var/lib/php/session
 chown -R root.nginx /var/lib/php/opcache
 chown -R root.nginx /var/lib/php/wsdlcache
 
-END OF COMMENT
+
 
 
 
@@ -82,10 +82,24 @@ echo -e "\n------------------------------------------------------\n"
 echo "                    DBMS Configuring"
 echo -e "\n------------------------------------------------------\n"
 
-#yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-#yum install -y postgresql11-server
+yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+yum install -y postgresql11-server
 
 ( echo postgres ; echo postgres ) | passwd postgres
+
+END OF COMMENT
+
+su - postgres
+echo PATH=$PATH:/usr/pgsql-11/bin/>>~/.bash_profile
+echo export PATH>>~/.bash_profile
+logout
+su - postgres
+initdb --locale=ru_RU.UTF-8 --encoding=UTF8 --username=postgres -W -k
+logout
+systemctl enable postgresql-11
+systemctl start postgresql-11
+
+
 
 echo -e "\n------------------------------------------------------\n"
 echo "                 ER installing is done by Ildar              "
