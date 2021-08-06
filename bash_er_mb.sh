@@ -87,18 +87,37 @@ yum install -y postgresql11-server
 
 ( echo postgres ; echo postgres ) | passwd postgres
 
-END OF COMMENT
 
-su - postgres
-echo PATH=$PATH:/usr/pgsql-11/bin/>>~/.bash_profile
-echo export PATH>>~/.bash_profile
-logout
-su - postgres
-initdb --locale=ru_RU.UTF-8 --encoding=UTF8 --username=postgres -W -k
-logout
+
+#su - postgres
+su - postgres -c 'echo PATH=$PATH:/usr/pgsql-11/bin/>>~/.bash_profile'
+su - postgres -c 'echo export PATH>>~/.bash_profile'
+
+( echo postgres ; echo postgres ) | su - postgres -c 'initdb --locale=ru_RU.UTF-8 --encoding=UTF8 --username=postgres -W -k'
 systemctl enable postgresql-11
 systemctl start postgresql-11
+sed -i 's/trust/md5/g' /var/lib/pgsql/11/data/pg_hba.conf
+sed -i "s/#listen_addresses = 'localhost'/listen_addresses='*'/g" /var/lib/pgsql/11/data/postgresql.conf
+sed -i "s/datestyle = 'iso, dmy'/datestyle = 'german, dmy'/g" /var/lib/pgsql/11/data/postgresql.conf
 
+sudo -u postgres -H -- psql -c "create role dev login password 'dev' superuser inherit createdb createrole replication;"
+echo "firewall-cmd --zone=public --add-port=80/tcp --permanent" >> /etc/sysconfig/iptables
+systemctl restart firewalld
+
+mv d3_nl /var/www/html
+mv er_19.09.0.pd3 /var/www/html
+END OF COMMENT
+
+
+cd /var/www/html
+chmod +x d3_nl
+( echo dev ; echo y ; echo postgres ; echo postgres ; echo y ; echo y ; echo y ) | d3_nl -f localinstall er_19.09.0.pd3 
+
+mv er_19.09.0 /tmp/
+mv /var/www/html/Etc/conf.inc.default /var/www/html/Etc/conf.inc
+
+
+echo "done"
 
 
 echo -e "\n------------------------------------------------------\n"

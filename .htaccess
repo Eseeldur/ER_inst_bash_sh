@@ -1,0 +1,79 @@
+DirectoryIndex index.php
+Options -Indexes
+Options -MultiViews
+
+AddDefaultCharset UTF-8
+RewriteEngine On
+
+RewriteRule ^d3$ - [F]
+RewriteRule ^(.*).mdl$ - [F]
+RewriteRule ^(.*).inc$ - [F]
+RewriteRule ^(.*).frm$ - [F]
+RewriteRule ^(.*).rpt$ - [F]
+RewriteRule ^Etc/(.*)$ - [F]
+RewriteRule ^temp/(.*)$ - [F]
+RewriteRule ^Themes/(.*)$ - [F]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^~(d3[a-z]+)$ index.php?$1=1 [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^-([a-z_]+)(\/([a-zA-Z0-9\-\_\/\\]+))?$ request.php?type=$1&_endpoint_=$3 [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([a-zA-Z0-9\-\_\/\\\.]*)\.[0-9]+(\_[a-z]+)*\.js/?$ $1$2.js [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([a-zA-Z0-9\-\_\/\\\.]*)\.[0-9]+(\_[a-z]+)*\.css/?$ $1$2.css [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([a-zA-Z0-9\-\_\/\\\.]*)\_[a-z]+\.js/?$ $1.js [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([a-zA-Z0-9\-\_\/\\\.]*)\_[a-z]+\.css/?$ $1.css [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^~(Icon|Image)(_[a-zA-Z0-9\-\_]+)?\/([a-zA-Z0-9\-\_\/]+)(\.(png|jpeg|jpg|gif))?$ gettheme.php?type=$1&name=$3$2.$5 [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^~Cmp([a-zA-Z]+)\/([a-zA-Z0-9\-\_\/]*)$ gettheme.php?type=CmpImage&cmp=$1&name=$2 [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^~IconForm\/([a-zA-Z0-9\-\_\/]*)$ gettheme.php?type=IconForm&name=$1 [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^~FormImage\/([a-zA-Z0-9\-\_\/]+)(\.(png|jpeg|jpg|gif))?$ gettheme.php?type=FormImage&name=$1.$3 [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^~Static\/([a-zA-Z0-9\-\_\/\.]*)$ gettheme.php?type=Static&name=$1 [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} ^(.+)\/restapi$
+RewriteRule ^restapi\/([a-zA-Z0-9\-\_\/\\]+)?$ request.php?type=restapi&_endpoint_=$1 [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} ^(.+)\/(webservice(s?)|ws)$
+RewriteCond %{QUERY_STRING} ^wsdl$
+RewriteRule ^(webservice(s?)|ws)\/([a-zA-Z0-9\_\/]+)$ webservice.php?service=$3&type=wsdl [L]
+
+RewriteCond %{REQUEST_FILENAME} ^(.+)\/(webservice(s?)|ws)$
+RewriteRule ^(webservice(s?)|ws)\/([a-zA-Z0-9\_\/]+).xsd$ webservice.php?service=$3&type=xsd [L]
+
+RewriteCond %{QUERY_STRING} !^(wsdl|xsd)$
+RewriteRule ^(webservice(s?)|ws)\/([a-zA-Z0-9\_\/]+)$ webservice.php?service=$3 [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} ^(.+)\/rpc$
+RewriteRule ^rpc\/([a-zA-Z0-9\_\/]+)$ rpc.php?__params=$1 [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^fileredirect_([a-z0-9]+)\/([\s\S]*)$ request.php?%{QUERY_STRING} [L]
+
+php_flag short_open_tag on
+php_flag display_errors on
+
+php_value post_max_size 300M
+php_value upload_max_filesize 300M
+
+AddOutputFilterByType DEFLATE text/plain
+AddOutputFilterByType DEFLATE text/html
+AddOutputFilterByType DEFLATE text/xml
+AddOutputFilterByType DEFLATE text/css
+AddOutputFilterByType DEFLATE application/xml
+AddOutputFilterByType DEFLATE application/json
+AddOutputFilterByType DEFLATE application/xhtml+xml
+AddOutputFilterByType DEFLATE application/rss+xml
+AddOutputFilterByType DEFLATE application/javascript
+AddOutputFilterByType DEFLATE application/x-javascript
